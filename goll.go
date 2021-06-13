@@ -35,6 +35,7 @@ func CompileDir(dir string) (*ir.Module, error) {
 			}
 		}
 	}
+	prog.End()
 
 	return prog.m, nil
 }
@@ -51,12 +52,18 @@ func CompileSrc(filename string, src string) (*ir.Module, error) {
 		fset: fset,
 	}
 	err = prog.AddFile(file)
-	return prog.m, err
+	if err != nil {
+		return nil, err
+	}
+
+	prog.End()
+
+	return prog.m, nil
 }
 
 func (p *Program) AddFile(file *ast.File) error {
 	for _, decl := range file.Decls {
-		err := p.AddDecl(decl)
+		err := p.CompileDecl(decl)
 		if err != nil {
 			return err
 		}
