@@ -14,7 +14,7 @@ func (p *Program) CompileDecl(decl ast.Decl) error {
 		return p.CompileFuncDecl(d)
 
 	default:
-		return fmt.Errorf("%s: unknown declaration type: %T", p.fset.Position(decl.Pos()).String(), decl)
+		return fmt.Errorf("%s: unknown declaration type: %T", p.Fset.Position(decl.Pos()).String(), decl)
 	}
 }
 
@@ -32,8 +32,16 @@ func (p *Program) CompileFuncDecl(decl *ast.FuncDecl) error {
 		retType = p.ConvertTypeString(decl.Type.Results.List[0].Type.(*ast.Ident).Name)
 	}
 
-	p.fn = p.m.NewFunc(decl.Name.Name, retType, params...)
-	p.block = p.fn.NewBlock("entry")
+	p.Fn = p.M.NewFunc(decl.Name.Name, retType, params...)
+	p.Block = p.Fn.NewBlock("entry")
+
+	var err error
+	for _, stmt := range decl.Body.List {
+		err = p.CompileStmt(stmt)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

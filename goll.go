@@ -6,14 +6,23 @@ import (
 	"go/token"
 
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/value"
 )
 
-type Program struct {
-	m    *ir.Module
-	fset *token.FileSet
+type Value interface {
+	Cleanup(p *Program)
+	SetOwned(bool)
+	Value() value.Value
+}
 
-	fn    *ir.Func
-	block *ir.Block
+type Program struct {
+	M    *ir.Module
+	Fset *token.FileSet
+
+	Fn    *ir.Func
+	Block *ir.Block
+
+	Vars map[string]Variable
 }
 
 func CompileDir(dir string) (*ir.Module, error) {
@@ -24,8 +33,9 @@ func CompileDir(dir string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		m:    ir.NewModule(),
-		fset: fset,
+		M:    ir.NewModule(),
+		Fset: fset,
+		Vars: make(map[string]Variable),
 	}
 	for _, p := range parsed {
 		for _, file := range p.Files {
@@ -37,7 +47,7 @@ func CompileDir(dir string) (*ir.Module, error) {
 	}
 	prog.End()
 
-	return prog.m, nil
+	return prog.M, nil
 }
 
 func CompileSrc(filename string, src string) (*ir.Module, error) {
@@ -48,8 +58,9 @@ func CompileSrc(filename string, src string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		m:    ir.NewModule(),
-		fset: fset,
+		M:    ir.NewModule(),
+		Fset: fset,
+		Vars: make(map[string]Variable),
 	}
 	err = prog.AddFile(file)
 	if err != nil {
@@ -58,7 +69,7 @@ func CompileSrc(filename string, src string) (*ir.Module, error) {
 
 	prog.End()
 
-	return prog.m, nil
+	return prog.M, nil
 }
 
 func (p *Program) AddFile(file *ast.File) error {

@@ -1,8 +1,8 @@
 package goll
 
 func (p *Program) CleanupFunc() {
-	if p.fn != nil && p.block.Term == nil {
-		p.block.NewRet(nil)
+	if p.Fn != nil && p.Block.Term == nil {
+		p.Block.NewRet(nil)
 	}
 }
 
