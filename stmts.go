@@ -10,6 +10,6 @@ func (p *Program) CompileStmt(stmt ast.Stmt) error {
 	case *ast.AssignStmt:
 		return p.CompileAssignStmt(s)
 	default:
-		return fmt.Errorf("%s: unknown statement type: %T", p.Fset.Position(stmt.Pos()).String(), stmt)
+		return fmt.Errorf("%s: unknown statement type: %T", p.Pos(stmt), stmt)
 	}
 }

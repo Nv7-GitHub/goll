@@ -14,7 +14,7 @@ func (p *Program) CompileDecl(decl ast.Decl) error {
 		return p.CompileFuncDecl(d)
 
 	default:
-		return fmt.Errorf("%s: unknown declaration type: %T", p.Fset.Position(decl.Pos()).String(), decl)
+		return fmt.Errorf("%s: unknown declaration type: %T", p.Pos(decl), decl)
 	}
 }
 

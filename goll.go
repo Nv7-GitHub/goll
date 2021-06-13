@@ -13,6 +13,8 @@ type Value interface {
 	Cleanup(p *Program)
 	SetOwned(bool)
 	Value() value.Value
+	Copy() Value
+	SetValue(value.Value)
 }
 
 type Program struct {
@@ -80,4 +82,8 @@ func (p *Program) AddFile(file *ast.File) error {
 		}
 	}
 	return nil
+}
+
+func (p *Program) Pos(node ast.Node) string {
+	return p.Fset.Position(node.Pos()).String()
 }

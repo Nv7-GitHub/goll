@@ -33,11 +33,27 @@ func (p *Program) GetStorable(expr ast.Expr, val Value) (value.Value, error) {
 		v, exists := p.Vars[e.Name]
 		if exists {
 			v.Value.Cleanup(p)
+			v.Value = val
+			p.Vars[e.Name] = v
 			return v.Storage, nil
 		}
-		return p.Block.NewAlloca(val.Value().Type()), nil
+
+		v.Storage = p.Block.NewAlloca(val.Value().Type())
+		v.Value = val
+		p.Vars[e.Name] = v
+		return v.Storage, nil
 
 	default:
-		return nil, fmt.Errorf("%s: cannot store to type %T", p.Fset.Position(expr.Pos()).String(), expr)
+		return nil, fmt.Errorf("%s: cannot store to type %T", p.Pos(expr), expr)
 	}
+}
+
+func (p *Program) CompileIdent(stm *ast.Ident) (Value, error) {
+	v, exists := p.Vars[stm.Name]
+	if !exists {
+		return nil, fmt.Errorf("%s: no such variable %s", p.Pos(stm), stm.Name)
+	}
+	newV := v.Value.Copy()
+	newV.SetValue(p.Block.NewLoad(newV.Value().Type(), v.Storage))
+	return newV, nil
 }
