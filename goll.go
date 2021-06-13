@@ -8,6 +8,10 @@ import (
 	"github.com/llir/llvm/ir"
 )
 
+type Program struct {
+	m *ir.Module
+}
+
 func CompileDir(dir string) (*ir.Module, error) {
 	fset := token.NewFileSet()
 	parsed, err := parser.ParseDir(fset, dir, nil, 0)
@@ -15,17 +19,19 @@ func CompileDir(dir string) (*ir.Module, error) {
 		return nil, err
 	}
 
-	m := ir.NewModule()
+	prog := &Program{
+		m: ir.NewModule(),
+	}
 	for _, p := range parsed {
 		for _, file := range p.Files {
-			err = AddFile(m, file)
+			err = prog.AddFile(file)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return m, nil
+	return prog.m, nil
 }
 
 func CompileSrc(src string) (*ir.Module, error) {
@@ -35,11 +41,13 @@ func CompileSrc(src string) (*ir.Module, error) {
 		return nil, err
 	}
 
-	m := ir.NewModule()
-	err = AddFile(m, file)
-	return m, err
+	prog := &Program{
+		m: ir.NewModule(),
+	}
+	err = prog.AddFile(file)
+	return prog.m, err
 }
 
-func AddFile(mod *ir.Module, file *ast.File) error {
+func (p *Program) AddFile(file *ast.File) error {
 	return nil
 }
