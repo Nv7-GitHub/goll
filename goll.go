@@ -9,7 +9,11 @@ import (
 )
 
 type Program struct {
-	m *ir.Module
+	m    *ir.Module
+	fset *token.FileSet
+
+	fn    *ir.Func
+	block *ir.Block
 }
 
 func CompileDir(dir string) (*ir.Module, error) {
@@ -20,7 +24,8 @@ func CompileDir(dir string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		m: ir.NewModule(),
+		m:    ir.NewModule(),
+		fset: fset,
 	}
 	for _, p := range parsed {
 		for _, file := range p.Files {
@@ -34,20 +39,27 @@ func CompileDir(dir string) (*ir.Module, error) {
 	return prog.m, nil
 }
 
-func CompileSrc(src string) (*ir.Module, error) {
+func CompileSrc(filename string, src string) (*ir.Module, error) {
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "", src, 0)
+	file, err := parser.ParseFile(fset, filename, src, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	prog := &Program{
-		m: ir.NewModule(),
+		m:    ir.NewModule(),
+		fset: fset,
 	}
 	err = prog.AddFile(file)
 	return prog.m, err
 }
 
 func (p *Program) AddFile(file *ast.File) error {
+	for _, decl := range file.Decls {
+		err := p.AddDecl(decl)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

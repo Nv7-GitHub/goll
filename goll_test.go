@@ -10,7 +10,7 @@ import (
 var src string
 
 func TestCompileSrc(t *testing.T) {
-	out, err := CompileSrc(src)
+	out, err := CompileSrc("test.goll", src)
 	if err != nil {
 		t.Fatal(err)
 	}
