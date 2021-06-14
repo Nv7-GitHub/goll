@@ -16,6 +16,9 @@ func (p *Program) CompileExpr(expr ast.Expr) (Value, error) {
 	case *ast.Ident:
 		return p.CompileIdent(e)
 
+	case *ast.CallExpr:
+		return p.CompileCallExpr(e)
+
 	default:
 		return nil, fmt.Errorf("%s: unknown expression type: %T", p.Pos(expr), expr)
 	}

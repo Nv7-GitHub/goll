@@ -24,7 +24,8 @@ type Program struct {
 	Fn    *ir.Func
 	Block *ir.Block
 
-	Vars map[string]Variable
+	Vars  map[string]Variable
+	Funcs map[string]*ir.Func
 }
 
 func CompileDir(dir string) (*ir.Module, error) {
@@ -35,9 +36,10 @@ func CompileDir(dir string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		M:    ir.NewModule(),
-		Fset: fset,
-		Vars: make(map[string]Variable),
+		M:     ir.NewModule(),
+		Fset:  fset,
+		Vars:  make(map[string]Variable),
+		Funcs: make(map[string]*ir.Func),
 	}
 	for _, p := range parsed {
 		for _, file := range p.Files {
@@ -60,9 +62,10 @@ func CompileSrc(filename string, src string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		M:    ir.NewModule(),
-		Fset: fset,
-		Vars: make(map[string]Variable),
+		M:     ir.NewModule(),
+		Fset:  fset,
+		Vars:  make(map[string]Variable),
+		Funcs: make(map[string]*ir.Func),
 	}
 	err = prog.AddFile(file)
 	if err != nil {

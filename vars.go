@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"go/ast"
 
-	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/value"
 )
 
 type Variable struct {
 	Value   Value
-	Storage *ir.InstAlloca
+	Storage value.Value
 }
 
 func (p *Program) CompileAssignStmt(stm *ast.AssignStmt) error {
