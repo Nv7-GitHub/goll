@@ -38,7 +38,7 @@ func (p *Program) CompileAssignStmt(stm *ast.AssignStmt) error {
 		if err != nil {
 			return err
 		}
-		rhs, err = p.MathExpr(lhs, rhs, op, stm.TokPos, stm.Lhs[0].Pos())
+		rhs, err = p.BinaryExpr(lhs, rhs, op, stm.TokPos, stm.Lhs[0].Pos())
 		if err != nil {
 			return err
 		}
