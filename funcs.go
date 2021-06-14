@@ -40,6 +40,23 @@ func (p *Program) CompileFuncDecl(decl *ast.FuncDecl) error {
 
 	p.Block = p.Fn.NewBlock("entry")
 
+	// Params
+	for _, par := range decl.Type.Params.List {
+		for _, name := range par.Names {
+			kind := p.ConvertTypeString(par.Type.(*ast.Ident).Name)
+			val, err := p.GetValFromType(par, kind)
+			if err != nil {
+				return err
+			}
+			vr := p.Block.NewAlloca(kind)
+			p.Block.NewStore(val.Value(), vr)
+			p.Vars[name.Name] = Variable{
+				Value:   val,
+				Storage: vr,
+			}
+		}
+	}
+
 	var err error
 	for _, stmt := range decl.Body.List {
 		err = p.CompileStmt(stmt)
