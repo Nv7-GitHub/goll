@@ -17,17 +17,7 @@ func (p *Program) CompileFuncDecl(decl *ast.FuncDecl) error {
 		for _, name := range par.Names {
 			kind := p.ConvertTypeString(par.Type.(*ast.Ident).Name)
 			param := ir.NewParam(name.Name, kind)
-
-			val, err := p.GetValFromType(par, kind)
-			if err != nil {
-				return err
-			}
-
 			params = append(params, param)
-			p.Vars[name.Name] = Variable{
-				Value:   val,
-				Storage: param,
-			}
 		}
 	}
 	var retType types.Type = types.Void

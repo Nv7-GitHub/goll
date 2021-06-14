@@ -8,8 +8,8 @@ import (
 )
 
 type Variable struct {
-	Value   Value
 	Storage value.Value
+	Value   Value
 }
 
 func (p *Program) CompileAssignStmt(stm *ast.AssignStmt) error {
@@ -32,15 +32,19 @@ func (p *Program) GetStorable(expr ast.Expr, val Value) (value.Value, error) {
 		v, exists := p.Vars[e.Name]
 		if exists {
 			v.Value.Cleanup(p)
-			v.Value = val
-			p.Vars[e.Name] = v
+			p.Vars[e.Name] = Variable{
+				Value:   val,
+				Storage: v.Storage,
+			}
 			return v.Storage, nil
 		}
 
-		v.Storage = p.Block.NewAlloca(val.Value().Type())
-		v.Value = val
-		p.Vars[e.Name] = v
-		return v.Storage, nil
+		storage := p.Block.NewAlloca(val.Value().Type())
+		p.Vars[e.Name] = Variable{
+			Storage: storage,
+			Value:   val,
+		}
+		return storage, nil
 
 	default:
 		return nil, fmt.Errorf("%s: cannot store to type %T", p.Pos(expr), expr)

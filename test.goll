@@ -2,15 +2,9 @@ package main
 
 //import "external"
 
-func add(a, b int) int {
-  return a + b
-}
-
 func main() {
   //external.Printf("Hello, World!")
-  a := 1
-  b := 2
+  a := "Hello, "
+  b := "World!"
   c := a + b
-  d := add(a, b)
-  return
 }

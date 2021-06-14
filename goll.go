@@ -13,6 +13,7 @@ type Value interface {
 	Cleanup(p *Program)
 	SetOwned(bool)
 	Value() value.Value
+	Data(p *Program) value.Value
 	Copy() Value
 	SetValue(value.Value)
 }
@@ -26,6 +27,10 @@ type Program struct {
 
 	Vars  map[string]Variable
 	Funcs map[string]*ir.Func
+
+	TmpUsed int
+
+	CFuncs map[string]*ir.Func
 }
 
 func CompileDir(dir string) (*ir.Module, error) {
