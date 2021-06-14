@@ -20,6 +20,12 @@ func (p *Program) CompileStmt(stmt ast.Stmt) error {
 	case *ast.IfStmt:
 		return p.CompileIfStmt(s)
 
+	case *ast.ForStmt:
+		return p.CompileForStmt(s)
+
+	case *ast.IncDecStmt:
+		return p.CompileIncDecStmt(s)
+
 	default:
 		return fmt.Errorf("%s: unknown statement type: %T", p.Pos(stmt), stmt)
 	}

@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 
+	"github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 )
 
@@ -19,6 +20,58 @@ var assignMathMap = map[token.Token]token.Token{
 	token.MUL_ASSIGN: token.MUL,
 	token.QUO_ASSIGN: token.QUO,
 	token.REM_ASSIGN: token.REM,
+}
+
+type numerical interface {
+	Value
+	IsShort() bool
+	Short(p *Program) value.Value
+	Long(p *Program) value.Value
+}
+
+func (p *Program) CompileIncDecStmt(stm *ast.IncDecStmt) error {
+	st, err := p.GetStorable(stm.X, NewIntConst(types.I32, 1), false)
+	if err != nil {
+		return err
+	}
+
+	val, err := p.CompileExpr(stm.X)
+	if err != nil {
+		return err
+	}
+
+	var rhs Value
+	num, ok := val.(numerical)
+	if !ok {
+		return fmt.Errorf("%s: value is not numerical", p.Pos(stm))
+	}
+	switch num.(type) {
+	case *Int:
+		if num.IsShort() {
+			rhs = NewIntConst(types.I32, 1)
+		} else {
+			rhs = NewIntConst(types.I64, 1)
+		}
+
+	case *Float:
+		if num.IsShort() {
+			rhs = NewFloatConst(types.Float, 1)
+		} else {
+			rhs = NewFloatConst(types.Double, 1)
+		}
+	}
+
+	op := token.ADD
+	if stm.Tok == token.DEC {
+		op = token.SUB
+	}
+	res, err := p.BinaryExpr(val, rhs, op, stm.TokPos, stm.X.Pos())
+	if err != nil {
+		return err
+	}
+
+	p.Block.NewStore(res.Value(), st)
+	return nil
 }
 
 func (p *Program) CompileAssignStmt(stm *ast.AssignStmt) error {

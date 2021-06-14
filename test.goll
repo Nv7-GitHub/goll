@@ -35,4 +35,8 @@ func main() {
   } else {
     external.Printf("I'm not sure if comparisons work...\n")
   }
+
+  for i := 1; i <= 100; i++ {
+    external.Printf("%d\n", i)
+  }
 }

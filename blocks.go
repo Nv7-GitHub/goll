@@ -53,3 +53,51 @@ func (p *Program) CompileIfStmt(stm *ast.IfStmt) error {
 	p.Block = end
 	return nil
 }
+
+func (p *Program) CompileForStmt(stm *ast.ForStmt) error {
+	if stm.Init != nil {
+		err := p.CompileStmt(stm.Init)
+		if err != nil {
+			return err
+		}
+	}
+
+	condblock := p.Fn.NewBlock(fmt.Sprintf("forcond.%d", p.TmpUsed))
+	p.TmpUsed++
+	p.Block.NewBr(condblock)
+	p.Block = condblock
+
+	cond, err := p.CompileExpr(stm.Cond)
+	if err != nil {
+		return err
+	}
+
+	body := p.Fn.NewBlock(fmt.Sprintf("forbody.%d", p.TmpUsed))
+	p.TmpUsed++
+
+	end := p.Fn.NewBlock(fmt.Sprintf("forend.%d", p.TmpUsed))
+	p.TmpUsed++
+
+	p.Block.NewCondBr(cond.Value(), body, end)
+
+	p.Block = body
+
+	for _, stm := range stm.Body.List {
+		err = p.CompileStmt(stm)
+		if err != nil {
+			return err
+		}
+	}
+
+	if stm.Post != nil {
+		err = p.CompileStmt(stm.Post)
+		if err != nil {
+			return err
+		}
+	}
+
+	p.Block.NewBr(condblock)
+
+	p.Block = end
+	return nil
+}
