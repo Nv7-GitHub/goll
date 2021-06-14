@@ -56,10 +56,12 @@ type Float struct {
 	val  value.Value
 }
 
-func (f *Float) Cleanup(_ *Program)          {}
-func (f *Float) SetOwned(_ bool)             {}
-func (f *Float) Value() value.Value          { return f.val }
-func (f *Float) Data(_ *Program) value.Value { return f.val }
+func (f *Float) Cleanup(_ *Program) {}
+func (f *Float) SetOwned(_ bool)    {}
+func (f *Float) Value() value.Value { return f.val }
+func (f *Float) Data(p *Program) value.Value {
+	return f.Long(p)
+}
 func (f *Float) SetValue(newVal value.Value) { f.val = newVal }
 func (f *Float) IsShort() bool               { return f.kind.Equal(types.Float) }
 func (f *Float) Copy() Value {
@@ -70,13 +72,13 @@ func (f *Float) Short(p *Program) value.Value {
 	if f.kind.Equal(types.Float) {
 		return f.val
 	}
-	return p.Block.NewFPTrunc(f.val, types.I32)
+	return p.Block.NewFPTrunc(f.val, types.Float)
 }
 func (f *Float) Long(p *Program) value.Value {
 	if f.kind.Equal(types.I64) {
 		return f.val
 	}
-	return p.Block.NewFPExt(f.val, types.I64)
+	return p.Block.NewFPExt(f.val, types.Double)
 }
 
 func NewFloatConst(kind *types.FloatType, val float64) *Float {
