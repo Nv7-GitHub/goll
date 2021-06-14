@@ -25,7 +25,7 @@ func (p *Program) ConvertTypeString(t string) types.Type {
 }
 
 func EvaluateString(s string) string {
-	return strings.ReplaceAll(s[1:len(s)-1], "\\n", "\n")
+	return strings.ReplaceAll(strings.ReplaceAll(s[1:len(s)-1], "\\n", "\n"), "\\", "")
 }
 
 func (p *Program) CompileBasicLit(lit *ast.BasicLit) (Value, error) {

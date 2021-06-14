@@ -23,5 +23,5 @@ func main() {
   mid := ", "
   h := "World!"
   i := g + mid + h
-  external.Printf("%s + %s is %s\n", g, h, i)
+  external.Printf("\"%s\" + \"%s\" is \"%s\"\n", g, h, i)
 }

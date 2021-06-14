@@ -114,7 +114,7 @@ func (p *Program) NewStringFromGo(val string) *String {
 	stringType := stringTypeMap["string"]
 	v := p.Block.NewAlloca(stringType)
 	length := p.Block.NewGetElementPtr(stringType, v, constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0))
-	p.Block.NewStore(constant.NewInt(types.I64, int64(len(val)+1)), length)
+	p.Block.NewStore(constant.NewInt(types.I64, int64(len(val))), length)
 
 	vl := p.M.NewGlobalDef(fmt.Sprintf(".str.%d", p.TmpUsed), irutil.NewCString(val))
 	p.TmpUsed++
