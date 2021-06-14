@@ -10,6 +10,9 @@ func (p *Program) CompileDecl(decl ast.Decl) error {
 	case *ast.FuncDecl:
 		return p.CompileFuncDecl(d)
 
+	case *ast.GenDecl:
+		return p.CompileGenDecl(d)
+
 	default:
 		return fmt.Errorf("%s: unknown declaration type: %T", p.Pos(decl), decl)
 	}

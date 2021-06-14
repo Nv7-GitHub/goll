@@ -13,6 +13,10 @@ func (p *Program) CompileStmt(stmt ast.Stmt) error {
 	case *ast.ReturnStmt:
 		return p.CompileReturnStmt(s)
 
+	case *ast.ExprStmt:
+		_, err := p.CompileExpr(s.X)
+		return err
+
 	default:
 		return fmt.Errorf("%s: unknown statement type: %T", p.Pos(stmt), stmt)
 	}

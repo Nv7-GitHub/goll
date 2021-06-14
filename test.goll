@@ -1,22 +1,27 @@
 package main
 
-//import "external"
+import "external"
 
 func add(a, b int) int {
   return a + b
 }
 
 func main() {
-  //external.Printf("Hello, World!")
+  external.Printf("%s\n", "Hello, World!")
+  
   a := 1
   b := 2
   c := add(a, b)
+  external.Printf("%d + %d is %d\n", a, b, c)
 
   d := 0.1
   e := 0.2
   f := d + e
+  external.Printf("%f + %f is %f\n", d, e, f)
 
-  g := "Hello, "
+  g := "Hello"
+  mid := ", "
   h := "World!"
-  i := g + h
+  i := g + mid + h
+  external.Printf("%s + %s is %s\n", g, h, i)
 }

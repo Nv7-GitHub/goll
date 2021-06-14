@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"strconv"
+	"strings"
 
 	"github.com/llir/llvm/ir/types"
 )
@@ -21,6 +22,10 @@ var stringTypeMap = map[string]types.Type{
 
 func (p *Program) ConvertTypeString(t string) types.Type {
 	return stringTypeMap[t]
+}
+
+func EvaluateString(s string) string {
+	return strings.ReplaceAll(s[1:len(s)-1], "\\n", "\n")
 }
 
 func (p *Program) CompileBasicLit(lit *ast.BasicLit) (Value, error) {
@@ -40,7 +45,7 @@ func (p *Program) CompileBasicLit(lit *ast.BasicLit) (Value, error) {
 		return NewFloatConst(stringTypeMap["float"].(*types.FloatType), v), nil
 
 	case token.STRING:
-		return p.NewStringFromGo(lit.Value), nil
+		return p.NewStringFromGo(EvaluateString(lit.Value)), nil
 
 	default:
 		return nil, fmt.Errorf("%s: unknown literal type %s", p.Pos(lit), lit.Kind.String())

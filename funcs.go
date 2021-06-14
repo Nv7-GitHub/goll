@@ -74,9 +74,19 @@ func (p *Program) CompileReturnStmt(stm *ast.ReturnStmt) error {
 }
 
 func (p *Program) CompileCallExpr(expr *ast.CallExpr) (Value, error) {
-	_, ok := expr.Fun.(*ast.SelectorExpr)
+	sel, ok := expr.Fun.(*ast.SelectorExpr)
 	if ok {
-		return nil, fmt.Errorf("%s: selector functions aren't implemented", p.Pos(expr))
+		modName := sel.X.(*ast.Ident).Name
+		funName := sel.Sel.Name
+		mod, exists := p.Modules[modName]
+		if !exists {
+			return nil, fmt.Errorf("%s: module %s hasn't been imported", p.Pos(expr), modName)
+		}
+		fun, exists := mod[funName]
+		if !exists {
+			return nil, fmt.Errorf("%s: module %s doesnt have function %s", p.Pos(expr), modName, funName)
+		}
+		return fun(p, expr.Args...)
 	}
 
 	name := expr.Fun.(*ast.Ident).Name

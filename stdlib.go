@@ -31,3 +31,14 @@ func getMemcpy(p *Program) *ir.Func {
 	}
 	return p.CFuncs[name]
 }
+
+func getPrintf(p *Program) *ir.Func {
+	name := "printf"
+	_, exists := p.CFuncs[name]
+	if !exists {
+		printf := p.M.NewFunc(name, types.I32, ir.NewParam("format", types.I8Ptr))
+		printf.Sig.Variadic = true
+		p.CFuncs[name] = printf
+	}
+	return p.CFuncs[name]
+}
