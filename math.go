@@ -10,16 +10,7 @@ import (
 	"github.com/llir/llvm/ir/value"
 )
 
-func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
-	lhs, err := p.CompileExpr(expr.X)
-	if err != nil {
-		return nil, err
-	}
-	rhs, err := p.CompileExpr(expr.Y)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *Program) MathExpr(lhs, rhs Value, op token.Token, opPos token.Pos, lPos token.Pos) (Value, error) {
 	// Integer math
 	_, ok := lhs.(*Int)
 	if ok {
@@ -38,7 +29,7 @@ func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
 			kind = types.I64
 		}
 
-		switch expr.Op {
+		switch op {
 		case token.ADD:
 			return NewInt(kind, p.Block.NewAdd(lval, rval)), nil
 
@@ -55,7 +46,7 @@ func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
 			return NewInt(kind, p.Block.NewSRem(lval, rval)), nil
 
 		default:
-			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(expr.OpPos).String(), expr.Op.String())
+			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(opPos).String(), op.String())
 		}
 	}
 
@@ -77,7 +68,7 @@ func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
 			kind = types.Double
 		}
 
-		switch expr.Op {
+		switch op {
 		case token.ADD:
 			return NewFloat(kind, p.Block.NewFAdd(lval, rval)), nil
 
@@ -94,7 +85,7 @@ func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
 			return NewFloat(kind, p.Block.NewFRem(lval, rval)), nil
 
 		default:
-			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(expr.OpPos).String(), expr.Op.String())
+			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(opPos).String(), op.String())
 		}
 	}
 
@@ -131,5 +122,18 @@ func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
 		return res, nil
 	}
 
-	return nil, fmt.Errorf("%s: cannot perform operation on type %T", p.Pos(expr.X), lhs)
+	return nil, fmt.Errorf("%s: cannot perform operation on type %T", p.Fset.Position(lPos).String(), lhs)
+}
+
+func (p *Program) CompileBinaryExpr(expr *ast.BinaryExpr) (Value, error) {
+	lhs, err := p.CompileExpr(expr.X)
+	if err != nil {
+		return nil, err
+	}
+	rhs, err := p.CompileExpr(expr.Y)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.MathExpr(lhs, rhs, expr.Op, expr.OpPos, expr.X.Pos())
 }

@@ -56,8 +56,7 @@ func (p *Program) GetValFromType(n ast.Node, kind types.Type) (Value, error) {
 	switch t := kind.(type) {
 	case *types.IntType:
 		return NewIntConst(t, 0), nil
-
-	default:
-		return nil, fmt.Errorf("%s: unknown value for type %s", p.Pos(n), kind.String())
 	}
+
+	return nil, fmt.Errorf("%s: unknown value for type %s", p.Pos(n), kind.String())
 }

@@ -14,14 +14,19 @@ func main() {
   c := add(a, b)
   external.Printf("%d + %d is %d\n", a, b, c)
 
-  d := 0.1
-  e := 0.2
-  f := d + e
-  external.Printf("%f + %f is %f\n", d, e, f)
+  a := 0.1
+  b := 0.2
+  c := a + b
+  external.Printf("%f + %f is %f\n", a, b, c)
 
-  g := "Hello"
+  a := "Hello"
   mid := ", "
-  h := "World!"
-  i := g + mid + h
-  external.Printf("\"%s\" + \"%s\" is \"%s\"\n", g, h, i)
+  b := "World!"
+  c := a + mid + b
+  external.Printf("\"%s\" + \"%s\" is \"%s\"\n", a, b, c)
+
+  a := "Hello"
+  a += ", "
+  a += "World! "
+  external.Printf("\"%s\" (Done with +=)\n", a)
 }

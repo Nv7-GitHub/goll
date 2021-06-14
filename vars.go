@@ -3,6 +3,7 @@ package goll
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"github.com/llir/llvm/ir/value"
 )
@@ -12,25 +13,46 @@ type Variable struct {
 	Value   Value
 }
 
+var assignMathMap = map[token.Token]token.Token{
+	token.ADD_ASSIGN: token.ADD,
+	token.SUB_ASSIGN: token.SUB,
+	token.MUL_ASSIGN: token.MUL,
+	token.QUO_ASSIGN: token.QUO,
+	token.REM_ASSIGN: token.REM,
+}
+
 func (p *Program) CompileAssignStmt(stm *ast.AssignStmt) error {
 	rhs, err := p.CompileExpr(stm.Rhs[0])
 	if err != nil {
 		return err
 	}
-	st, err := p.GetStorable(stm.Lhs[0], rhs)
+
+	st, err := p.GetStorable(stm.Lhs[0], rhs, stm.Tok == token.DEFINE)
 	if err != nil {
 		return err
+	}
+
+	op, exists := assignMathMap[stm.Tok]
+	if exists {
+		lhs, err := p.CompileExpr(stm.Lhs[0])
+		if err != nil {
+			return err
+		}
+		rhs, err = p.MathExpr(lhs, rhs, op, stm.TokPos, stm.Lhs[0].Pos())
+		if err != nil {
+			return err
+		}
 	}
 
 	p.Block.NewStore(rhs.Value(), st)
 	return nil
 }
 
-func (p *Program) GetStorable(expr ast.Expr, val Value) (value.Value, error) {
+func (p *Program) GetStorable(expr ast.Expr, val Value, redefine bool) (value.Value, error) {
 	switch e := expr.(type) {
 	case *ast.Ident:
 		v, exists := p.Vars[e.Name]
-		if exists {
+		if exists && !redefine {
 			v.Value.Cleanup(p)
 			p.Vars[e.Name] = Variable{
 				Value:   val,
