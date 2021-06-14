@@ -51,16 +51,53 @@ func NewInt(kind *types.IntType, val value.Value) *Int {
 	}
 }
 
+type Float struct {
+	kind *types.FloatType
+	val  value.Value
+}
+
+func (f *Float) Cleanup(_ *Program)          {}
+func (f *Float) SetOwned(_ bool)             {}
+func (f *Float) Value() value.Value          { return f.val }
+func (f *Float) Data(_ *Program) value.Value { return f.val }
+func (f *Float) SetValue(newVal value.Value) { f.val = newVal }
+func (f *Float) IsShort() bool               { return f.kind.Equal(types.Float) }
+func (f *Float) Copy() Value {
+	cp := *f
+	return &cp
+}
+func (f *Float) Short(p *Program) value.Value {
+	if f.kind.Equal(types.Float) {
+		return f.val
+	}
+	return p.Block.NewFPTrunc(f.val, types.I32)
+}
+func (f *Float) Long(p *Program) value.Value {
+	if f.kind.Equal(types.I64) {
+		return f.val
+	}
+	return p.Block.NewFPExt(f.val, types.I64)
+}
+
+func NewFloatConst(kind *types.FloatType, val float64) *Float {
+	return &Float{
+		kind: kind,
+		val:  constant.NewFloat(kind, val),
+	}
+}
+
+func NewFloat(kind *types.FloatType, val value.Value) *Float {
+	return &Float{
+		kind: kind,
+		val:  val,
+	}
+}
+
 type String struct {
 	freeable bool
 	val      value.Value
 }
 
-func (s *String) Cleanup(p *Program) {
-	if s.freeable {
-		p.Block.NewCall(getFree(p), p.Block.NewExtractValue(s.val, 1))
-	}
-}
 func (s *String) SetOwned(owned bool) { s.freeable = !owned } // True to disable freeable
 func (s *String) Value() value.Value  { return s.val }
 func (s *String) Data(p *Program) value.Value {
@@ -86,6 +123,21 @@ func (p *Program) NewStringFromGo(val string) *String {
 
 	value := p.Block.NewGetElementPtr(stringType, v, constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 1))
 	p.Block.NewStore(ptr, value)
+
+	return &String{
+		freeable: false,
+		val:      v,
+	}
+}
+
+func (p *Program) NewString(len value.Value, val value.Value) *String {
+	stringType := stringTypeMap["string"]
+	v := p.Block.NewAlloca(stringType)
+	length := p.Block.NewGetElementPtr(stringType, v, constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0))
+	p.Block.NewStore(len, length)
+
+	value := p.Block.NewGetElementPtr(stringType, v, constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 1))
+	p.Block.NewStore(val, value)
 
 	return &String{
 		freeable: false,

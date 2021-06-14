@@ -58,5 +58,6 @@ func (p *Program) CompileIdent(stm *ast.Ident) (Value, error) {
 	}
 	newV := v.Value.Copy()
 	newV.SetValue(p.Block.NewLoad(newV.Value().Type(), v.Storage))
+	newV.SetOwned(true)
 	return newV, nil
 }

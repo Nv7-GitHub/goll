@@ -41,10 +41,11 @@ func CompileDir(dir string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		M:     ir.NewModule(),
-		Fset:  fset,
-		Vars:  make(map[string]Variable),
-		Funcs: make(map[string]*ir.Func),
+		M:      ir.NewModule(),
+		Fset:   fset,
+		Vars:   make(map[string]Variable),
+		Funcs:  make(map[string]*ir.Func),
+		CFuncs: make(map[string]*ir.Func),
 	}
 	for _, p := range parsed {
 		for _, file := range p.Files {
@@ -67,10 +68,11 @@ func CompileSrc(filename string, src string) (*ir.Module, error) {
 	}
 
 	prog := &Program{
-		M:     ir.NewModule(),
-		Fset:  fset,
-		Vars:  make(map[string]Variable),
-		Funcs: make(map[string]*ir.Func),
+		M:      ir.NewModule(),
+		Fset:   fset,
+		Vars:   make(map[string]Variable),
+		Funcs:  make(map[string]*ir.Func),
+		CFuncs: make(map[string]*ir.Func),
 	}
 	err = prog.AddFile(file)
 	if err != nil {
