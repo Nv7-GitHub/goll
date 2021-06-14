@@ -146,3 +146,33 @@ func (p *Program) NewString(len value.Value, val value.Value) *String {
 		val:      v,
 	}
 }
+
+type Boolean struct {
+	val value.Value
+}
+
+func (b *Boolean) Cleanup(_ *Program)          {}
+func (b *Boolean) SetOwned(_ bool)             {}
+func (b *Boolean) Value() value.Value          { return b.val }
+func (b *Boolean) SetValue(newVal value.Value) { b.val = newVal }
+func (b *Boolean) Data(_ *Program) value.Value { return b.val }
+func (b *Boolean) Copy() Value {
+	cp := *b
+	return &cp
+}
+
+func NewBoolConst(val bool) *Boolean {
+	v := 0
+	if val {
+		v = 1
+	}
+	return &Boolean{
+		val: constant.NewInt(types.I1, int64(v)),
+	}
+}
+
+func NewBool(val value.Value) *Boolean {
+	return &Boolean{
+		val: val,
+	}
+}

@@ -29,4 +29,9 @@ func main() {
   a += ", "
   a += "World! "
   external.Printf("\"%s\" (Done with +=)\n", a)
+
+  a := 1
+  b := 2
+  c := a == b
+  external.Printf("%d\n", c)
 }

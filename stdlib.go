@@ -42,3 +42,12 @@ func getPrintf(p *Program) *ir.Func {
 	}
 	return p.CFuncs[name]
 }
+
+func getStrcmp(p *Program) *ir.Func {
+	name := "strcmp"
+	_, exists := p.CFuncs[name]
+	if !exists {
+		p.CFuncs[name] = p.M.NewFunc(name, types.I32, ir.NewParam("a", types.I8Ptr), ir.NewParam("b", types.I8Ptr))
+	}
+	return p.CFuncs[name]
+}

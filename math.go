@@ -6,6 +6,7 @@ import (
 	"go/token"
 
 	"github.com/llir/llvm/ir/constant"
+	"github.com/llir/llvm/ir/enum"
 	"github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 )
@@ -44,6 +45,24 @@ func (p *Program) MathExpr(lhs, rhs Value, op token.Token, opPos token.Pos, lPos
 
 		case token.REM:
 			return NewInt(kind, p.Block.NewSRem(lval, rval)), nil
+
+		case token.EQL:
+			return NewBool(p.Block.NewICmp(enum.IPredEQ, lval, rval)), nil
+
+		case token.LSS:
+			return NewBool(p.Block.NewICmp(enum.IPredSLT, lval, rval)), nil
+
+		case token.GTR:
+			return NewBool(p.Block.NewICmp(enum.IPredSGT, lval, rval)), nil
+
+		case token.NEQ:
+			return NewBool(p.Block.NewICmp(enum.IPredNE, lval, rval)), nil
+
+		case token.LEQ:
+			return NewBool(p.Block.NewICmp(enum.IPredSLE, lval, rval)), nil
+
+		case token.GEQ:
+			return NewBool(p.Block.NewICmp(enum.IPredSGE, lval, rval)), nil
 
 		default:
 			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(opPos).String(), op.String())
@@ -84,6 +103,24 @@ func (p *Program) MathExpr(lhs, rhs Value, op token.Token, opPos token.Pos, lPos
 		case token.REM:
 			return NewFloat(kind, p.Block.NewFRem(lval, rval)), nil
 
+		case token.EQL:
+			return NewBool(p.Block.NewFCmp(enum.FPredOEQ, lval, rval)), nil
+
+		case token.LSS:
+			return NewBool(p.Block.NewFCmp(enum.FPredOLT, lval, rval)), nil
+
+		case token.GTR:
+			return NewBool(p.Block.NewFCmp(enum.FPredOGT, lval, rval)), nil
+
+		case token.NEQ:
+			return NewBool(p.Block.NewFCmp(enum.FPredONE, lval, rval)), nil
+
+		case token.LEQ:
+			return NewBool(p.Block.NewFCmp(enum.FPredOLE, lval, rval)), nil
+
+		case token.GEQ:
+			return NewBool(p.Block.NewFCmp(enum.FPredOGE, lval, rval)), nil
+
 		default:
 			return nil, fmt.Errorf("%s: unknown operation type %s", p.Fset.Position(opPos).String(), op.String())
 		}
@@ -95,31 +132,64 @@ func (p *Program) MathExpr(lhs, rhs Value, op token.Token, opPos token.Pos, lPos
 		l := lhs.(*String)
 		r := rhs.(*String)
 
-		stringType := stringTypeMap["string"]
-		llen := p.Block.NewLoad(types.I64, p.Block.NewGetElementPtr(stringType, l.Value(), constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0)))
-		rlen := p.Block.NewLoad(types.I64, p.Block.NewGetElementPtr(stringType, r.Value(), constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0)))
-		outlen := p.Block.NewAdd(llen, rlen)
+		var lval value.Value
+		var rval value.Value
+		if op == token.EQL || op == token.LSS || op == token.GTR || op == token.NEQ || op == token.LEQ || op == token.GEQ {
+			lval = l.Data(p)
+			rval = r.Data(p)
+		}
+		switch op {
+		case token.EQL:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredEQ, cmped, constant.NewInt(types.I32, 0))), nil
 
-		out := p.Block.NewCall(getMalloc(p), p.Block.NewAdd(outlen, constant.NewInt(types.I64, 1))) // Add 1 for null terminator
+		case token.LSS:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredSLT, cmped, constant.NewInt(types.I32, 0))), nil
 
-		// Add null terminator
-		end := p.Block.NewGetElementPtr(types.I8, out, outlen)
-		p.Block.NewStore(constant.NewInt(types.I8, 0), end)
+		case token.GTR:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredSGT, cmped, constant.NewInt(types.I32, 0))), nil
 
-		// Memcpy first
-		p.Block.NewCall(getMemcpy(p), out, l.Data(p), llen)
+		case token.NEQ:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredNE, cmped, constant.NewInt(types.I32, 0))), nil
 
-		// Memcpy second to different chunk
-		outptr := p.Block.NewGetElementPtr(types.I8, out, llen)
-		p.Block.NewCall(getMemcpy(p), outptr, r.Data(p), rlen)
+		case token.LEQ:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredSLE, cmped, constant.NewInt(types.I32, 0))), nil
 
-		l.Cleanup(p)
-		r.Cleanup(p)
-		res := p.NewString(outlen, out)
-		res.SetOwned(false)
+		case token.GEQ:
+			cmped := p.Block.NewCall(getStrcmp(p), lval, rval)
+			return NewBool(p.Block.NewICmp(enum.IPredSGE, cmped, constant.NewInt(types.I32, 0))), nil
 
-		// Create string
-		return res, nil
+		default:
+			stringType := stringTypeMap["string"]
+			llen := p.Block.NewLoad(types.I64, p.Block.NewGetElementPtr(stringType, l.Value(), constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0)))
+			rlen := p.Block.NewLoad(types.I64, p.Block.NewGetElementPtr(stringType, r.Value(), constant.NewInt(types.I32, 0), constant.NewInt(types.I32, 0)))
+			outlen := p.Block.NewAdd(llen, rlen)
+
+			out := p.Block.NewCall(getMalloc(p), p.Block.NewAdd(outlen, constant.NewInt(types.I64, 1))) // Add 1 for null terminator
+
+			// Add null terminator
+			end := p.Block.NewGetElementPtr(types.I8, out, outlen)
+			p.Block.NewStore(constant.NewInt(types.I8, 0), end)
+
+			// Memcpy first
+			p.Block.NewCall(getMemcpy(p), out, l.Data(p), llen)
+
+			// Memcpy second to different chunk
+			outptr := p.Block.NewGetElementPtr(types.I8, out, llen)
+			p.Block.NewCall(getMemcpy(p), outptr, r.Data(p), rlen)
+
+			l.Cleanup(p)
+			r.Cleanup(p)
+			res := p.NewString(outlen, out)
+			res.SetOwned(false)
+
+			// Create string
+			return res, nil
+		}
 	}
 
 	return nil, fmt.Errorf("%s: cannot perform operation on type %T", p.Fset.Position(lPos).String(), lhs)
