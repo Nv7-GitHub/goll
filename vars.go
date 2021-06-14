@@ -76,6 +76,12 @@ func (p *Program) GetStorable(expr ast.Expr, val Value, redefine bool) (value.Va
 func (p *Program) CompileIdent(stm *ast.Ident) (Value, error) {
 	v, exists := p.Vars[stm.Name]
 	if !exists {
+		if stm.Name == "true" {
+			return NewBoolConst(true), nil
+		}
+		if stm.Name == "false" {
+			return NewBoolConst(false), nil
+		}
 		return nil, fmt.Errorf("%s: no such variable %s", p.Pos(stm), stm.Name)
 	}
 	newV := v.Value.Copy()

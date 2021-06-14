@@ -30,8 +30,9 @@ func main() {
   a += "World! "
   external.Printf("\"%s\" (Done with +=)\n", a)
 
-  a := 1
-  b := 2
-  c := a == b
-  external.Printf("%d\n", c)
+  if 1 < 2 {
+    external.Printf("Cool! If statements work!\n")
+  } else {
+    external.Printf("I'm not sure if comparisons work...\n")
+  }
 }
